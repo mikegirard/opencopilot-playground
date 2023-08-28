@@ -1,0 +1,12 @@
+playground/logs/
+playground/data
+playground/weaviate-data
+
+*.env
+
+**/node_modules
+.logs
+
+.idea/
+*.iml
+

@@ -1,0 +1,3 @@
+opencopilot-ai
+langchain
+atlassian-python-api

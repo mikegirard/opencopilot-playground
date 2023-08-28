@@ -1,0 +1,40 @@
+services:
+  opencopilot:
+    build: .
+    ports: 
+      - 3000:3000
+    expose:
+      - 3000
+    volumes:
+      - .:/copilot
+    env_file:
+      - opencopilot.env
+    environment:
+      - WEAVIATE_URL=http://weaviate:8080
+    depends_on:
+      - weaviate
+  weaviate:
+    image: semitechnologies/weaviate:latest
+    ports:
+      - 8080:8080
+    volumes:
+      - ./weaviate-data:/var/lib/weaviate
+    env_file:
+      - opencopilot.env
+    command: [ "--host", "0.0.0.0", "--port", "8080", "--scheme", "http" ]
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3001:3001"
+    expose:
+      - 3001
+    environment:
+      - 'BACKEND_HOST=http://opencopilot:3000'
+      - 'PORT=3001'
+    command: pnpm start
+    depends_on:
+      - weaviate
+      - opencopilot
+

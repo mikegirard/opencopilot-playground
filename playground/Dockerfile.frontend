@@ -1,0 +1,4 @@
+FROM ghcr.io/opencopilotdev/opencopilot-frontend:latest
+
+WORKDIR /app
+COPY frontend.env /app/.env

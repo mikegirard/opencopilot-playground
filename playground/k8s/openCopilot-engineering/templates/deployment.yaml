@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openCopilot-engineering
+  labels:
+    {{- include "App.labels" . | nindent 4 }}
+    tags.datadoghq.com/service: openCopilot-engineering
+    app: "openCopilot-engineering"
+    appCategory: "Ops"
+spec:
+  replicas: {{ default 1 .Values.deployment.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "App.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        ad.datadoghq.com/openCopilot-engineering.logs: >-
+          [{
+            "source": "none",
+            "auto_multi_line_detection": false
+          }]
+        
+        {{- with .Values.podAnnotations }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        
+
+      labels:
+        app: "openCopilot-engineering"
+        {{- include "App.selectorLabels" . | nindent 8 }}
+        tags.datadoghq.com/service: "openCopilot-engineering"
+        appCategory: "Ops"
+    spec:
+      imagePullSecrets:
+        - name: gitlabregistry
+      
+      containers:
+        - name: openCopilot-engineering
+          image: "{{ .Values.image.name }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
+          env:
+            - name: ENVIRONMENT
+              value: "{{ .Values.environment}}"
+            {{- range $key, $val := .Values.deployment.env }}
+            - name: "{{ $key }}"
+              value: "{{ $val }}"
+            {{ end }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.onePassword.secretName }}
+          
+          ports:
+            - name: http
+              containerPort: {{ .Values.container.httpPort }}
+              protocol: TCP
+          {{- if .Values.container.readinessProbe.enabled }}
+          readinessProbe:
+            httpGet:
+              path: "{{ .Values.container.readinessProbe.path }}"
+              port: {{ .Values.container.readinessProbe.port | default .Values.container.httpPort }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+
+      # These aren't usually used, but are supported by the values files
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

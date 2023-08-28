@@ -1,0 +1,65 @@
+# Default values for openCopilot-engineering.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+environment: staging
+# Image tag is not usually included here. It should be passed as part of the deployment command.
+image:
+  name: registry.gitlab.com/ninja-cat/openCopilot-engineering
+  # tag: Tag excluded on purpose. Should be specified in deploy cli options
+  pullPolicy: Always
+
+podAnnotations: {}
+
+container:
+  httpPort: 3000
+  readinessProbe:
+    enabled: false
+    path: /healthz
+    port: 3000
+
+deployment:
+  replicaCount: 1
+  env:
+    ENV_VAR_1: "value1"
+    ENV_VAR_2: "value2"
+
+service:
+  type: ClusterIP
+  port: 80
+
+resources: {}
+  # We leave this as a conscious choice for the user. This increases chances charts run
+  # on nodes with enough memory/cpu, as well as limiting max usage to prevent overloading a node.
+  # If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'. If running a Java/Kotlin
+  # Application, we request you DO set memory requests (min) and limits (max)
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+# If this needs to be run separately from core application code (like infrastructure apps)
+nodeSelector: {}
+#  nodeType: "ops"
+
+tolerations: []
+#  - key: nodeType
+#    operator: "Equal"
+#    value: "ops"
+#    effect: "NoSchedule"
+ingress:
+  enabled: true
+  ingressClassName: kong
+  annotations:
+    konghq.com/https-redirect-status-code: "301"
+    konghq.com/protocols: https
+    
+    # See the following page for additional annotations...
+    # https://ninjacat.atlassian.net/wiki/spaces/SHIN/pages/2651127850/Kong+Ingress+Controller
+  hosts:
+  - host: openCopilot-engineering.staging-ingress.ninjacat.network
+    paths:
+    - path: "/"
